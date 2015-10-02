@@ -46,18 +46,27 @@ public class DataGenerator extends BaseRichSpout {
     private BufferedReader reader;
     private DateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 2013-01-01 00:02:00
 
+    public static final String FIELD_STRING_TAXI_ID = "taxi_id";
+    public static final String FIELD_STRING_LICENSE = "license";
+    public static final String FIELD_DATE_PICKUP_TS = "pickup_ts";
+    public static final String FIELD_DATE_DROPOFF_TS = "dropoff_ts";
+    public static final String FIELD_STRING_PICKUP_CELL = "pickup_cell";
+    public static final String FIELD_STRING_DROPOFF_CELL = "dropoff_cell";
+    public static final String FIELD_DOUBLE_FARE = "fare";
+    public static final String FIELD_DOUBLE_TIP = "tip";
+
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(
                 new Fields(
-                        "taxi_id",
-                        "license",
-                        "pickup_ts",
-                        "dropoff_ts",
-                        "pickup_cell",
-                        "dropoff_cell",
-                        "fare",
-                        "tip"
+                        FIELD_STRING_TAXI_ID,
+                        FIELD_STRING_LICENSE,
+                        FIELD_DATE_PICKUP_TS,
+                        FIELD_DATE_DROPOFF_TS,
+                        FIELD_STRING_PICKUP_CELL,
+                        FIELD_STRING_DROPOFF_CELL,
+                        FIELD_DOUBLE_FARE,
+                        FIELD_DOUBLE_TIP
                 ));
     }
 
