@@ -2,6 +2,7 @@ import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
 
 /**
@@ -12,6 +13,8 @@ public class Main {
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.setSpout("data", new DataGenerator(), 1);
+        builder.setBolt("profit", new ProfitBolt(15 * 60), 10)
+                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_PICKUP_CELL));
 
         Config conf = new Config();
         conf.setDebug(true);
