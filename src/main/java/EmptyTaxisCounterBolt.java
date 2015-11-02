@@ -12,22 +12,55 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by affo on 02/10/15.
+ * Created by affo on 03/11/15.
  */
-public class EmptyTaxisBolt extends WindowBolt {
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EmptyTaxisBolt.class);
+public class EmptyTaxisCounterBolt extends WindowBolt {
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EmptyTaxisCounterBolt.class);
     private OutputCollector collector;
 
     public static final String FIELD_DATE_PICKUP_TS = "pickup_ts";
     public static final String FIELD_DATE_DROPOFF_TS = "dropoff_ts";
     public static final String FIELD_STRING_CELL = "cell";
-    public static final String FIELD_STRING_EMPTY_TAXY_ID = "empty_taxi_id";
+    private static final String FIELD_INTEGER_NO_EMPTY_TAXIS = "no_empty_taxis";
 
     /**
      * @param windowSize size of the window in seconds
      */
-    public EmptyTaxisBolt(int windowSize) {
+    public EmptyTaxisCounterBolt(int windowSize) {
         super(windowSize);
+    }
+
+    @Override
+    public void onWindow(List<Tuple> window) {
+        if (window.isEmpty()) {
+            LOG.info("Empty window passed. Doing nothing...");
+            return;
+        }
+
+        Map<String, Integer> counter = new HashMap<>();
+
+        for (Tuple t : window) {
+            String cell = t.getStringByField(EmptyTaxisBolt.FIELD_STRING_CELL);
+            Integer count = counter.get(cell);
+            if (count == null) {
+                count = 0;
+            }
+            count++;
+            counter.put(cell, count);
+        }
+
+        Tuple trigger = window.get(window.size() - 1);
+
+        for (Map.Entry<String, Integer> e : counter.entrySet()) {
+            this.collector.emit(
+                    new Values(
+                            trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS),
+                            trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS),
+                            e.getKey(), // cell
+                            e.getValue() // # empty taxis
+                    )
+            );
+        }
     }
 
     @Override
@@ -41,49 +74,13 @@ public class EmptyTaxisBolt extends WindowBolt {
     }
 
     @Override
-    public void onWindow(List<Tuple> window) {
-        if (window.isEmpty()) {
-            LOG.info("Empty window passed. Doing nothing...");
-            return;
-        }
-
-        Tuple trigger = window.get(window.size() - 1);
-        Map<String, String> emptyTaxis = getEmptyTaxis(window);
-
-        for (Map.Entry<String, String> e : emptyTaxis.entrySet()) {
-            this.collector.emit(
-                    new Values(
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS),
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS),
-                            e.getValue(), // dropoff cell
-                            e.getKey() // empty taxi ID
-                    )
-            );
-        }
-    }
-
-    private Map<String, String> getEmptyTaxis(List<Tuple> window) {
-        Map<String, String> res = new HashMap<>();
-
-        for (Tuple t : window) {
-            String taxiID = t.getStringByField(DataGenerator.FIELD_STRING_TAXI_ID);
-            String cell = t.getStringByField(DataGenerator.FIELD_STRING_DROPOFF_CELL);
-
-            res.put(taxiID, cell);
-        }
-
-        return res;
-    }
-
-
-    @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(
                 new Fields(
                         FIELD_DATE_PICKUP_TS,
                         FIELD_DATE_DROPOFF_TS,
                         FIELD_STRING_CELL,
-                        FIELD_STRING_EMPTY_TAXY_ID
+                        FIELD_INTEGER_NO_EMPTY_TAXIS
                 )
         );
     }

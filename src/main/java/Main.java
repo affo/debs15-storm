@@ -17,10 +17,13 @@ public class Main {
 
         builder.setSpout("data", new DataGenerator(), 1);
         builder.setBolt("profit", new ProfitBolt(PROFIT_WINDOW), 10)
-                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_PICKUP_CELL));
+                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_DROPOFF_CELL));
 
         builder.setBolt("empty_taxis", new EmptyTaxisBolt(EMPTY_TAXIS_WINDOW), 10)
-                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_PICKUP_CELL, DataGenerator.FIELD_STRING_TAXI_ID));
+                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_TAXI_ID));
+
+        builder.setBolt("empty_taxis_counter", new EmptyTaxisCounterBolt(EMPTY_TAXIS_WINDOW), 10)
+                .fieldsGrouping("empty_taxis", new Fields(EmptyTaxisBolt.FIELD_STRING_CELL));
 
         Config conf = new Config();
         conf.setDebug(true);
