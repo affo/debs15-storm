@@ -9,12 +9,18 @@ import backtype.storm.utils.Utils;
  * Created by affo on 01/10/15.
  */
 public class Main {
+    public static int PROFIT_WINDOW = 15 * 60; // in seconds
+    public static int EMPTY_TAXIS_WINDOW = 30 * 60; // in seconds
+
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.setSpout("data", new DataGenerator(), 1);
-        builder.setBolt("profit", new ProfitBolt(15 * 60), 10)
+        builder.setBolt("profit", new ProfitBolt(PROFIT_WINDOW), 10)
                 .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_PICKUP_CELL));
+
+        builder.setBolt("empty_taxis", new EmptyTaxisBolt(EMPTY_TAXIS_WINDOW), 10)
+                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_PICKUP_CELL, DataGenerator.FIELD_STRING_TAXI_ID));
 
         Config conf = new Config();
         conf.setDebug(true);
