@@ -7,4 +7,4 @@ build_run:
 	# running with docker
 	sleep 2
 	docker build -t $(TEST_IMG) .
-	docker run $(TEST_IMG) $(MAIN_CLASS)
+	docker run --rm $(TEST_IMG) $(MAIN_CLASS)
