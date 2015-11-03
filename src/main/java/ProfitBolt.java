@@ -16,6 +16,8 @@ public class ProfitBolt extends WindowBolt {
     private static final Logger LOG = LoggerFactory.getLogger(ProfitBolt.class);
     private OutputCollector collector;
 
+    public static final String OUT_STREAM_ID = "profit_stream";
+
     public static final String FIELD_DATE_PICKUP_TS = "pickup_ts";
     public static final String FIELD_DATE_DROPOFF_TS = "dropoff_ts";
     public static final String FIELD_STRING_CELL = "cell";
@@ -50,6 +52,7 @@ public class ProfitBolt extends WindowBolt {
         Map<String, Double> medianPerCell = getMedianPerCell(profitPerCell);
         for (Map.Entry<String, Double> e : medianPerCell.entrySet()) {
             this.collector.emit(
+                    OUT_STREAM_ID,
                     new Values(
                             trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS),
                             trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS),
@@ -99,7 +102,8 @@ public class ProfitBolt extends WindowBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(
+        outputFieldsDeclarer.declareStream(
+                OUT_STREAM_ID,
                 new Fields(
                         FIELD_DATE_PICKUP_TS,
                         FIELD_DATE_DROPOFF_TS,
