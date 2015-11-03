@@ -11,6 +11,7 @@ import backtype.storm.utils.Utils;
 public class Main {
     public static int PROFIT_WINDOW = 15 * 60; // in seconds
     public static int EMPTY_TAXIS_WINDOW = 30 * 60; // in seconds
+    public static int PROFITABILITY_WINDOW = 15 * 60; // in seconds
 
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
@@ -24,6 +25,27 @@ public class Main {
 
         builder.setBolt("empty_taxis_counter", new EmptyTaxisCounterBolt(EMPTY_TAXIS_WINDOW), 10)
                 .fieldsGrouping("empty_taxis", new Fields(EmptyTaxisBolt.FIELD_STRING_CELL));
+
+        // joiner
+        builder.setBolt("profitability", new ProfitabilityBolt(PROFITABILITY_WINDOW), 10)
+                .fieldsGrouping(
+                        "profit",
+                        ProfitBolt.OUT_STREAM_ID,
+                        new Fields(
+                                ProfitBolt.FIELD_DATE_PICKUP_TS,
+                                ProfitBolt.FIELD_DATE_DROPOFF_TS,
+                                ProfitBolt.FIELD_STRING_CELL
+                        )
+                )
+                .fieldsGrouping(
+                        "empty_taxis_counter",
+                        EmptyTaxisCounterBolt.OUT_STREAM_ID,
+                        new Fields(
+                                EmptyTaxisCounterBolt.FIELD_DATE_PICKUP_TS,
+                                EmptyTaxisCounterBolt.FIELD_DATE_DROPOFF_TS,
+                                EmptyTaxisCounterBolt.FIELD_STRING_CELL
+                        )
+                );
 
         Config conf = new Config();
         conf.setDebug(true);
