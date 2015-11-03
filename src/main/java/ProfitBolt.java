@@ -48,14 +48,16 @@ public class ProfitBolt extends WindowBolt {
         }
 
         Tuple trigger = window.get(window.size() - 1);
+        Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
+        Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
+
         Map<String, List<Double>> profitPerCell = getProfitPerCell(window);
         Map<String, Double> medianPerCell = getMedianPerCell(profitPerCell);
         for (Map.Entry<String, Double> e : medianPerCell.entrySet()) {
             this.collector.emit(
                     OUT_STREAM_ID,
                     new Values(
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS),
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS),
+                            puTs, doTs,
                             e.getKey(), // cell
                             e.getValue() // median profit
                     )

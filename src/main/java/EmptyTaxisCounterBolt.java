@@ -52,13 +52,14 @@ public class EmptyTaxisCounterBolt extends WindowBolt {
         }
 
         Tuple trigger = window.get(window.size() - 1);
+        Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
+        Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
 
         for (Map.Entry<String, Integer> e : counter.entrySet()) {
             this.collector.emit(
                     OUT_STREAM_ID,
                     new Values(
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS),
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS),
+                            puTs, doTs,
                             e.getKey(), // cell
                             e.getValue() // # empty taxis
                     )

@@ -48,13 +48,14 @@ public class EmptyTaxisBolt extends WindowBolt {
         }
 
         Tuple trigger = window.get(window.size() - 1);
-        Map<String, String> emptyTaxis = getEmptyTaxis(window);
+        Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
+        Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
 
+        Map<String, String> emptyTaxis = getEmptyTaxis(window);
         for (Map.Entry<String, String> e : emptyTaxis.entrySet()) {
             this.collector.emit(
                     new Values(
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS),
-                            trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS),
+                            puTs, doTs,
                             e.getValue(), // dropoff cell
                             e.getKey() // empty taxi ID
                     )
