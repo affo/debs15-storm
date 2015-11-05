@@ -21,7 +21,9 @@ public class ProfitabilityBolt extends WindowBolt {
     public static final String FIELD_DATE_PICKUP_TS = "pickup_datetime";
     public static final String FIELD_DATE_DROPOFF_TS = "dropoff_datetime";
     public static final String FIELD_STRING_CELL = "cell";
-    private static final String FIELD_DOUBLE_PROFITABILITY = "profitability";
+    public static final String FIELD_DOUBLE_MEDIAN_PROFIT = "profit";
+    public static final String FIELD_INTEGER_EMPTY_TAXIS = "no_empty_taxis";
+    public static final String FIELD_DOUBLE_PROFITABILITY = "profitability";
 
     /**
      * @param windowSize size of the window in seconds
@@ -59,14 +61,14 @@ public class ProfitabilityBolt extends WindowBolt {
 
     @Override
     public void onWindow(List<Tuple> window) {
-        Map<String, Tuple> profit = getProfits(window);
+        Map<String, Tuple> profits = getProfits(window);
         Map<String, Tuple> noEmptyTaxis = getNoEmptyTaxis(window);
 
         Tuple trigger = window.get(window.size() - 1);
         Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
         Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
 
-        for (Map.Entry<String, Tuple> e : profit.entrySet()) {
+        for (Map.Entry<String, Tuple> e : profits.entrySet()) {
             Tuple numT = e.getValue();
             Tuple denT = noEmptyTaxis.get(e.getKey());
 
@@ -74,13 +76,22 @@ public class ProfitabilityBolt extends WindowBolt {
                 // this means we have to wait for that tuple to come
                 continue;
             }
-            
+
             String cell = numT.getStringByField(ProfitBolt.FIELD_STRING_CELL);
             double num = numT.getDoubleByField(ProfitBolt.FIELD_DOUBLE_MEDIAN_PROFIT);
             int den = denT.getIntegerByField(EmptyTaxisCounterBolt.FIELD_INTEGER_NO_EMPTY_TAXIS);
 
+            if (den == 0) {
+                // no empty taxis
+                // discard value as specified in FAQs
+                continue;
+            }
+
+            int empty_taxis = denT.getIntegerByField(EmptyTaxisCounterBolt.FIELD_INTEGER_NO_EMPTY_TAXIS);
+            double profit = numT.getDoubleByField(ProfitBolt.FIELD_DOUBLE_MEDIAN_PROFIT);
+
             this.collector.emit(
-                    new Values(puTs, doTs, cell, num / den)
+                    new Values(puTs, doTs, cell, profit, empty_taxis, num / den)
             );
         }
     }
@@ -126,6 +137,8 @@ public class ProfitabilityBolt extends WindowBolt {
                         FIELD_DATE_PICKUP_TS,
                         FIELD_DATE_DROPOFF_TS,
                         FIELD_STRING_CELL,
+                        FIELD_DOUBLE_MEDIAN_PROFIT,
+                        FIELD_INTEGER_EMPTY_TAXIS,
                         FIELD_DOUBLE_PROFITABILITY
                 )
         );
