@@ -9,6 +9,7 @@ import backtype.storm.utils.Utils;
  * Created by affo on 01/10/15.
  */
 public class Main {
+    public static final int TOP_N = 10;
     public static int PROFIT_WINDOW = 15 * 60; // in seconds
     public static int EMPTY_TAXIS_WINDOW = 30 * 60; // in seconds
     public static int PROFITABILITY_WINDOW = 15 * 60; // in seconds
@@ -47,8 +48,10 @@ public class Main {
                         )
                 );
 
+        builder.setBolt("rankings", new RankingBolt(TOP_N)).globalGrouping("profitability");
+
         Config conf = new Config();
-        conf.setDebug(true);
+        // conf.setDebug(true);
 
         if (args != null && args.length > 0) {
             conf.setNumWorkers(3);
