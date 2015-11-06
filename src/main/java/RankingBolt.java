@@ -71,6 +71,7 @@ public class RankingBolt extends BaseRichBolt {
     public void execute(Tuple t) {
         boolean changed = false;
         double currProfitability = t.getDoubleByField(ProfitabilityBolt.FIELD_DOUBLE_PROFITABILITY);
+        String currCell = t.getStringByField(ProfitabilityBolt.FIELD_STRING_CELL);
 
         for (int i = 0; i < rankingLength && !changed; i++) {
             if (ranking[i] == null) {
@@ -78,13 +79,19 @@ public class RankingBolt extends BaseRichBolt {
                 changed = true;
             } else {
                 double profitability = ranking[i].getDoubleByField(ProfitabilityBolt.FIELD_DOUBLE_PROFITABILITY);
-                if (currProfitability >= profitability) {
+                String cell = ranking[i].getStringByField(ProfitabilityBolt.FIELD_STRING_CELL);
+
+                if (currProfitability > profitability) {
                     // shift right
                     for (int j = rankingLength - 1; j > i; j--) {
                         ranking[j] = ranking[j - 1];
                     }
                     ranking[i] = t;
                     changed = true;
+                } else if (currCell.equals(cell) && currProfitability == profitability) {
+                    // avoid that the same tuple received
+                    // more times fills the rankings
+                    break;
                 }
             }
         }
