@@ -50,7 +50,13 @@ public class Main {
 
         builder.setBolt("rankings", new RankingBolt(TOP_N)).globalGrouping("profitability");
 
+        builder.setBolt("to_file", new DataWriter()).globalGrouping("rankings");
+
         Config conf = new Config();
+
+        // It seems that activating DEBUG causes
+        // storm to never-ending output metrics... bah
+
         // conf.setDebug(true);
 
         if (args != null && args.length > 0) {
