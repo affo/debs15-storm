@@ -7,4 +7,7 @@ build_run:
 	# running with docker
 	sleep 2
 	docker build -t $(TEST_IMG) .
-	docker run --rm $(TEST_IMG) $(MAIN_CLASS)
+	docker rm -f debs15-running; true
+	docker run --name debs15-running $(TEST_IMG) $(MAIN_CLASS)
+	docker cp debs15-running:/rankings.output .
+	docker rm debs15-running
