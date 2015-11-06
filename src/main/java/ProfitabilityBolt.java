@@ -87,11 +87,8 @@ public class ProfitabilityBolt extends WindowBolt {
                 continue;
             }
 
-            int empty_taxis = denT.getIntegerByField(EmptyTaxisCounterBolt.FIELD_INTEGER_NO_EMPTY_TAXIS);
-            double profit = numT.getDoubleByField(ProfitBolt.FIELD_DOUBLE_MEDIAN_PROFIT);
-
             this.collector.emit(
-                    new Values(puTs, doTs, cell, profit, empty_taxis, num / den)
+                    new Values(puTs, doTs, cell, num, den, num / den)
             );
         }
     }
