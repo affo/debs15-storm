@@ -1,3 +1,5 @@
+package storm;
+
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 

@@ -1,3 +1,5 @@
+package storm;
+
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -42,7 +44,7 @@ public class DataGenerator extends BaseRichSpout {
     private static final Logger LOG = LoggerFactory.getLogger(DataGenerator.class);
     private static final int NO_FIELDS = 17;
     private SpoutOutputCollector collector;
-    private static final String dataPath = "data.sample.csv";
+    private static final String dataPath = "/data.sample.csv";
     private BufferedReader reader;
     private DateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 2013-01-01 00:02:00
 

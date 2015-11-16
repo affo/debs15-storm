@@ -1,5 +1,5 @@
 TEST_IMG=debs15-storm-test
-MAIN_CLASS=Main
+MAIN_CLASS=storm.Main
 
 build_run:
 	# building with gradle wrapper
