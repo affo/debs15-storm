@@ -44,7 +44,7 @@ public class DataGenerator extends BaseRichSpout {
     private static final Logger LOG = LoggerFactory.getLogger(DataGenerator.class);
     private static final int NO_FIELDS = 17;
     private SpoutOutputCollector collector;
-    private static final String dataPath = "/data.sample.csv";
+    private String dataPath;
     private BufferedReader reader;
     private DateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 2013-01-01 00:02:00
 
@@ -56,6 +56,10 @@ public class DataGenerator extends BaseRichSpout {
     public static final String FIELD_STRING_DROPOFF_CELL = "dropoff_cell";
     public static final String FIELD_DOUBLE_FARE = "fare";
     public static final String FIELD_DOUBLE_TIP = "tip";
+
+    public DataGenerator(String dataPath) {
+        this.dataPath = dataPath;
+    }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {

@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout("data", new DataGenerator(), 1);
+        builder.setSpout("data", new DataGenerator("/data.sample.csv"), 1);
         builder.setBolt("profit", new ProfitBolt(PROFIT_WINDOW), 10)
                 .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_DROPOFF_CELL));
 
