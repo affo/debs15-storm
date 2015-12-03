@@ -39,6 +39,7 @@ public class EmptyTaxisBolt extends WindowBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        super.prepare(map, topologyContext, outputCollector);
         this.collector = outputCollector;
     }
 
@@ -77,7 +78,6 @@ public class EmptyTaxisBolt extends WindowBolt {
 
         return res;
     }
-
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {

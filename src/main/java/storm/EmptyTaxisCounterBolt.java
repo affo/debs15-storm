@@ -76,6 +76,7 @@ public class EmptyTaxisCounterBolt extends WindowBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        super.prepare(map, topologyContext, outputCollector);
         this.collector = outputCollector;
     }
 
