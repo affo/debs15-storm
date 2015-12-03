@@ -43,6 +43,7 @@ import java.util.Map;
 public class DataGenerator extends BaseRichSpout {
     private static final Logger LOG = LoggerFactory.getLogger(DataGenerator.class);
     private static final int NO_FIELDS = 17;
+    boolean _feof;
     private SpoutOutputCollector collector;
     private String dataPath;
     private BufferedReader reader;
@@ -78,6 +79,7 @@ public class DataGenerator extends BaseRichSpout {
 
     @Override
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
+        this._feof = false;
         this.collector = spoutOutputCollector;
         this.reader = new BufferedReader(
                 new InputStreamReader(
@@ -90,6 +92,7 @@ public class DataGenerator extends BaseRichSpout {
     public void nextTuple() {
         try {
             String line = this.reader.readLine();
+
             if (line != null) {
                 String[] tokens = line.split(",");
                 if (tokens.length != NO_FIELDS) {
@@ -122,10 +125,10 @@ public class DataGenerator extends BaseRichSpout {
                                 tip
                         )
                 );
+            } else if (!_feof) {
+                LOG.info(dataPath + ": FEOF");
+                _feof = true;
             }
-            // else {
-            // LOG.info(dataPath + ": FEOF");
-            // }
         } catch (IOException e) {
             LOG.error("Error in reading nextTuple", e);
         } catch (AreaMapper.OutOfGridException e) {
