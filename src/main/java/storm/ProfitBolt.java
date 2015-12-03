@@ -39,6 +39,7 @@ public class ProfitBolt extends WindowBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        super.prepare(map, topologyContext, outputCollector);
         this.collector = outputCollector;
     }
 
@@ -79,7 +80,16 @@ public class ProfitBolt extends WindowBolt {
                 profit = new ArrayList<>();
             }
 
-            profit.add(fare + tip);
+            int i = 0;
+            for ( ; i < profit.size(); i++) {
+                if(profit.get(i) > fare + tip) {
+                    break;
+                }
+            }
+
+            profit.add(i, fare + tip);
+
+
             profitPerCell.put(pickupCell, profit);
         }
         return profitPerCell;
