@@ -42,7 +42,7 @@ public class DataWriter extends BaseRichBolt {
         }
     }
 
-    private String getNewLine(Tuple t) {
+    protected String getNewLine(Tuple t) {
         String l = "{\n\n";
         l += getKeyValue(t, RankingBolt.FIELD_DATE_PICKUP_TS);
         l += getKeyValue(t, RankingBolt.FIELD_DATE_DROPOFF_TS);

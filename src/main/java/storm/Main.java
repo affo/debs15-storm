@@ -52,7 +52,7 @@ public class Main {
 
         builder.setBolt("rankings", new RankingBolt(TOP_N)).globalGrouping("profitability");
 
-        builder.setBolt("to_file", new DataWriter()).globalGrouping("rankings");
+        builder.setBolt("to_file", new SimpleDataWriter()).globalGrouping("rankings");
 
         Config conf = new Config();
 
