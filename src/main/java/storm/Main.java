@@ -20,14 +20,25 @@ public class Main {
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.setSpout("data", new DataGenerator("/data.sample.csv"), 1);
+
         builder.setBolt("profit", new ProfitBolt(PROFIT_WINDOW), 10)
-                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_DROPOFF_CELL));
+                .fieldsGrouping(
+                        "data",
+                        DataGenerator.PROFIT_STREAM_ID,
+                        new Fields(DataGenerator.FIELD_STRING_DROPOFF_CELL)
+                );
 
         builder.setBolt("empty_taxis", new EmptyTaxisBolt(EMPTY_TAXIS_WINDOW), 10)
-                .fieldsGrouping("data", new Fields(DataGenerator.FIELD_STRING_TAXI_ID));
+                .fieldsGrouping(
+                        "data",
+                        DataGenerator.EMPTY_TAXIS_STREAM_ID,
+                        new Fields(DataGenerator.FIELD_STRING_TAXI_ID)
+                );
+
 
         builder.setBolt("empty_taxis_counter", new EmptyTaxisCounterBolt(EMPTY_TAXIS_WINDOW), 10)
                 .fieldsGrouping("empty_taxis", new Fields(EmptyTaxisBolt.FIELD_STRING_CELL));
+
 
         // joiner
         builder.setBolt("profitability", new ProfitabilityBolt(PROFITABILITY_WINDOW), 10)
@@ -67,7 +78,7 @@ public class Main {
         } else {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("test", conf, builder.createTopology());
-            Utils.sleep(10000);
+            Utils.sleep(30000);
             cluster.killTopology("test");
             cluster.shutdown();
         }

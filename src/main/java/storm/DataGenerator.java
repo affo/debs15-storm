@@ -43,6 +43,8 @@ import java.util.Map;
 public class DataGenerator extends BaseRichSpout {
     private static final Logger LOG = LoggerFactory.getLogger(DataGenerator.class);
     private static final int NO_FIELDS = 17;
+    public static final String PROFIT_STREAM_ID = "num";
+    public static final String EMPTY_TAXIS_STREAM_ID = "den";
     boolean _feof;
     private SpoutOutputCollector collector;
     private String dataPath;
@@ -64,17 +66,19 @@ public class DataGenerator extends BaseRichSpout {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(
-                new Fields(
-                        FIELD_STRING_TAXI_ID,
-                        FIELD_STRING_LICENSE,
-                        FIELD_DATE_PICKUP_TS,
-                        FIELD_DATE_DROPOFF_TS,
-                        FIELD_STRING_PICKUP_CELL,
-                        FIELD_STRING_DROPOFF_CELL,
-                        FIELD_DOUBLE_FARE,
-                        FIELD_DOUBLE_TIP
-                ));
+        Fields fields =  new Fields(
+                FIELD_STRING_TAXI_ID,
+                FIELD_STRING_LICENSE,
+                FIELD_DATE_PICKUP_TS,
+                FIELD_DATE_DROPOFF_TS,
+                FIELD_STRING_PICKUP_CELL,
+                FIELD_STRING_DROPOFF_CELL,
+                FIELD_DOUBLE_FARE,
+                FIELD_DOUBLE_TIP
+        );
+
+        outputFieldsDeclarer.declareStream(PROFIT_STREAM_ID, fields);
+        outputFieldsDeclarer.declareStream(EMPTY_TAXIS_STREAM_ID, fields);
     }
 
     @Override
@@ -113,18 +117,19 @@ public class DataGenerator extends BaseRichSpout {
                 double fare = Double.valueOf(tokens[11]);
                 double tip = Double.valueOf(tokens[14]);
 
-                this.collector.emit(
-                        new Values(
-                                taxiID,
-                                license,
-                                pickupTs,
-                                dropoffTs,
-                                pickupCell,
-                                dropoffCell,
-                                fare,
-                                tip
-                        )
+                Values tuple = new Values(
+                        taxiID,
+                        license,
+                        pickupTs,
+                        dropoffTs,
+                        pickupCell,
+                        dropoffCell,
+                        fare,
+                        tip
                 );
+
+                this.collector.emit(PROFIT_STREAM_ID, tuple);
+                this.collector.emit(EMPTY_TAXIS_STREAM_ID, tuple);
             } else if (!_feof) {
                 LOG.info(dataPath + ": FEOF");
                 _feof = true;
