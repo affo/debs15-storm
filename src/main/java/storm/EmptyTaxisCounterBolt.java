@@ -71,7 +71,7 @@ public class EmptyTaxisCounterBolt extends WindowBolt {
 
     @Override
     public Date getTs(Tuple t) {
-        return (Date) t.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
+        return (Date) t.getValueByField(EmptyTaxisBolt.FIELD_DATE_DROPOFF_TS);
     }
 
     @Override
