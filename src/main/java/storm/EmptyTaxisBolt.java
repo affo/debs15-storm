@@ -50,30 +50,23 @@ public class EmptyTaxisBolt extends WindowBolt {
             return;
         }
 
-        Tuple trigger = window.get(window.size() - 1);
-        Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
-        Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
-
-        Map<String, String> emptyTaxis = getEmptyTaxis(window);
-        for (Map.Entry<String, String> e : emptyTaxis.entrySet()) {
-            this.collector.emit(
-                    new Values(
-                            puTs, doTs,
-                            e.getValue(), // dropoff cell
-                            e.getKey() // empty taxi ID
-                    )
-            );
+        Map<String, Tuple> emptyTaxis = getEmptyTaxis(window);
+        for (Map.Entry<String, Tuple> e : emptyTaxis.entrySet()) {
+            Tuple t = e.getValue();
+            String taxiID = e.getKey();
+            String cell = t.getStringByField(DataGenerator.FIELD_STRING_DROPOFF_CELL);
+            Object puTs = t.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
+            Object doTs = t.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
+            this.collector.emit(new Values(puTs, doTs, cell, taxiID));
         }
     }
 
-    private Map<String, String> getEmptyTaxis(List<Tuple> window) {
-        Map<String, String> res = new HashMap<>();
+    private Map<String, Tuple> getEmptyTaxis(List<Tuple> window) {
+        Map<String, Tuple> res = new HashMap<>();
 
         for (Tuple t : window) {
             String taxiID = t.getStringByField(DataGenerator.FIELD_STRING_TAXI_ID);
-            String cell = t.getStringByField(DataGenerator.FIELD_STRING_DROPOFF_CELL);
-
-            res.put(taxiID, cell);
+            res.put(taxiID, t);
         }
 
         return res;
