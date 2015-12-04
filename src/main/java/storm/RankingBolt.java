@@ -101,6 +101,8 @@ public class RankingBolt extends BaseRichBolt {
         if (changed) {
             emitRanking(t);
         }
+
+        this.collector.ack(t);
     }
 
     private void emitRanking(Tuple t) {

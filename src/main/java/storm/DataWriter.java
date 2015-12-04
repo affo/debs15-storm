@@ -15,6 +15,7 @@ import java.util.Map;
 public class DataWriter extends BaseRichBolt {
     private static final String outputFileName = "rankings.output";
     private BufferedWriter writer;
+    private OutputCollector collector;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -28,6 +29,8 @@ public class DataWriter extends BaseRichBolt {
             e.printStackTrace();
             throw new RuntimeException("Error in opening " + outputFileName);
         }
+
+        this.collector = outputCollector;
     }
 
     @Override
@@ -40,6 +43,8 @@ public class DataWriter extends BaseRichBolt {
             e.printStackTrace();
             throw new RuntimeException("Error in writing to " + outputFileName);
         }
+
+        collector.ack(tuple);
     }
 
     protected String getNewLine(Tuple t) {
