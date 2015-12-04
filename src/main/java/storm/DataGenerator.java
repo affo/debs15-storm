@@ -6,6 +6,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,7 @@ public class DataGenerator extends BaseRichSpout {
     private String dataPath;
     private BufferedReader reader;
     private DateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 2013-01-01 00:02:00
+    private long lastTs;
 
     public static final String FIELD_STRING_TAXI_ID = "taxi_id";
     public static final String FIELD_STRING_LICENSE = "license";
@@ -62,6 +64,7 @@ public class DataGenerator extends BaseRichSpout {
 
     public DataGenerator(String dataPath) {
         this.dataPath = dataPath;
+        this.lastTs = 0L;
     }
 
     @Override
@@ -127,6 +130,18 @@ public class DataGenerator extends BaseRichSpout {
                         fare,
                         tip
                 );
+
+
+                long newTs = dropoffTs.getTime();
+                if (lastTs > 0) {
+                    // we have to sleep SECONDS_PER_TIME_UNIT
+                    // for each TIME_UNIT_IN_SECONDS passed from last tuple
+                    // to this one
+                    long fromTupleToSystemTime = WindowBolt.TIME_UNIT_IN_SECONDS * WindowBolt.SECONDS_PER_TIME_UNIT;
+                    long sleepTime = (newTs - lastTs) /  fromTupleToSystemTime;
+                    Utils.sleep(sleepTime);
+                }
+                lastTs = newTs;
 
                 this.collector.emit(PROFIT_STREAM_ID, tuple);
                 this.collector.emit(EMPTY_TAXIS_STREAM_ID, tuple);
