@@ -13,9 +13,13 @@ import java.util.Map;
  * Created by affo on 05/11/15.
  */
 public class DataWriter extends BaseRichBolt {
-    private static final String outputFileName = "rankings.output";
+    private String outputFileName;
     private BufferedWriter writer;
     private OutputCollector collector;
+
+    public DataWriter(String outputFileName) {
+        this.outputFileName = outputFileName;
+    }
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {

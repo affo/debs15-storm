@@ -17,11 +17,13 @@ public class Main {
     // this time should be lower, but we keep it high
     // just to get everything in a window
     public static int PROFITABILITY_WINDOW = 15 * 60; // in seconds
+    public static String INPUT_FILE = "/data.sample.csv";
+    public static String OUTPUT_FILE = "rankings.output";
 
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout("data", new DataGenerator("/data.sample.csv"), 1);
+        builder.setSpout("data", new DataGenerator(INPUT_FILE), 1);
 
         builder.setBolt("profit", new ProfitBolt(PROFIT_WINDOW), 10)
                 .fieldsGrouping(
@@ -65,7 +67,7 @@ public class Main {
 
         builder.setBolt("rankings", new RankingBolt(TOP_N)).globalGrouping("profitability");
 
-        builder.setBolt("to_file", new SimpleDataWriter()).globalGrouping("rankings");
+        builder.setBolt("to_file", new SimpleDataWriter(OUTPUT_FILE)).globalGrouping("rankings");
 
         Config conf = new Config();
 
