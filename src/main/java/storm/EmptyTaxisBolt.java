@@ -45,11 +45,6 @@ public class EmptyTaxisBolt extends WindowBolt {
 
     @Override
     public void onWindow(List<Tuple> window) {
-        if (window.isEmpty()) {
-            LOG.info("Empty window passed. Doing nothing...");
-            return;
-        }
-
         Map<String, Tuple> emptyTaxis = getEmptyTaxis(window);
         for (Map.Entry<String, Tuple> e : emptyTaxis.entrySet()) {
             Tuple t = e.getValue();

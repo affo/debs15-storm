@@ -36,11 +36,6 @@ public class EmptyTaxisCounterBolt extends WindowBolt {
 
     @Override
     public void onWindow(List<Tuple> window) {
-        if (window.isEmpty()) {
-            LOG.info("Empty window passed. Doing nothing...");
-            return;
-        }
-
         Map<String, Integer> counter = new HashMap<>();
 
         for (Tuple t : window) {

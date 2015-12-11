@@ -45,11 +45,6 @@ public class ProfitBolt extends WindowBolt {
 
     @Override
     public void onWindow(List<Tuple> window) {
-        if (window.isEmpty()) {
-            LOG.info("Empty window passed. Doing nothing...");
-            return;
-        }
-
         Tuple trigger = window.get(window.size() - 1);
         Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
         Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
