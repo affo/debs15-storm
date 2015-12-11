@@ -14,6 +14,8 @@ public class Main {
     public static final int TOP_N = 10;
     public static int PROFIT_WINDOW = 15 * 60; // in seconds
     public static int EMPTY_TAXIS_WINDOW = 30 * 60; // in seconds
+    // this time should be lower, but we keep it high
+    // just to get everything in a window
     public static int PROFITABILITY_WINDOW = 15 * 60; // in seconds
 
     public static void main(String[] args) throws Exception {
