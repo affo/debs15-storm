@@ -7,6 +7,10 @@ import backtype.storm.tuple.Tuple;
  */
 public class SimpleDataWriter extends DataWriter {
 
+    public SimpleDataWriter(String outputFileName) {
+        super(outputFileName);
+    }
+
     @Override
     protected String getNewLine(Tuple t) {
         String l = "{\n";
