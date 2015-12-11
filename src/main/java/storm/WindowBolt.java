@@ -45,6 +45,14 @@ public abstract class WindowBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         if (isTickTuple(tuple)) {
             advanceWindow();
+
+            if (!window.isEmpty()) {
+                // this is the TRIGGER (as in flink)
+                // in this case we evaluate the onWindow
+                // method every SECONDS_PER_TIME_UNIT which
+                // is basically window granularity
+                onWindow(window);
+            }
         } else {
 
             if (lastTime == 0) {
@@ -54,7 +62,6 @@ public abstract class WindowBolt extends BaseRichBolt {
             }
 
             window.add(tuple);
-            onWindow(this.window);
         }
 
         collector.ack(tuple);
@@ -82,7 +89,7 @@ public abstract class WindowBolt extends BaseRichBolt {
         }
 
         for (int i = 0; i < removeStop; i++) {
-            window.remove(i);
+            window.remove(0);
         }
     }
 
