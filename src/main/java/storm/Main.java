@@ -25,7 +25,7 @@ public class Main {
                 .fieldsGrouping(
                         "data",
                         DataGenerator.PROFIT_STREAM_ID,
-                        new Fields(DataGenerator.FIELD_STRING_DROPOFF_CELL)
+                        new Fields(DataGenerator.FIELD_STRING_PICKUP_CELL)
                 );
 
         builder.setBolt("empty_taxis", new EmptyTaxisBolt(EMPTY_TAXIS_WINDOW), 10)
