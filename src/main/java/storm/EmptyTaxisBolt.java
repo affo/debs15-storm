@@ -20,11 +20,6 @@ public class EmptyTaxisBolt extends WindowBolt {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EmptyTaxisBolt.class);
     private OutputCollector collector;
 
-    public static final String FIELD_DATE_PICKUP_TS = "pickup_ts";
-    public static final String FIELD_DATE_DROPOFF_TS = "dropoff_ts";
-    public static final String FIELD_STRING_CELL = "cell";
-    public static final String FIELD_STRING_EMPTY_TAXY_ID = "empty_taxi_id";
-
     /**
      * @param windowSize size of the window in seconds
      */
@@ -34,7 +29,7 @@ public class EmptyTaxisBolt extends WindowBolt {
 
     @Override
     public Date getTs(Tuple t) {
-        return (Date) t.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
+        return ((TaxiRide) t.getValue(1)).dropoffTS;
     }
 
     @Override
@@ -44,15 +39,12 @@ public class EmptyTaxisBolt extends WindowBolt {
     }
 
     @Override
-    public void onWindow(List<Tuple> window) {
+    public void onWindow(int windowID, List<Tuple> window) {
         Map<String, Tuple> emptyTaxis = getEmptyTaxis(window);
         for (Map.Entry<String, Tuple> e : emptyTaxis.entrySet()) {
-            Tuple t = e.getValue();
+            TaxiRide tr = ((TaxiRide) e.getValue().getValue(1));
             String taxiID = e.getKey();
-            String cell = t.getStringByField(DataGenerator.FIELD_STRING_DROPOFF_CELL);
-            Object puTs = t.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
-            Object doTs = t.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
-            this.collector.emit(new Values(puTs, doTs, cell, taxiID));
+            this.collector.emit(new Values(windowID, tr.dropoffCell, taxiID));
         }
     }
 
@@ -60,7 +52,7 @@ public class EmptyTaxisBolt extends WindowBolt {
         Map<String, Tuple> res = new HashMap<>();
 
         for (Tuple t : window) {
-            String taxiID = t.getStringByField(DataGenerator.FIELD_STRING_TAXI_ID);
+            String taxiID = ((TaxiRide) t.getValue(1)).taxiID;
             res.put(taxiID, t);
         }
 
@@ -70,12 +62,7 @@ public class EmptyTaxisBolt extends WindowBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(
-                new Fields(
-                        FIELD_DATE_PICKUP_TS,
-                        FIELD_DATE_DROPOFF_TS,
-                        FIELD_STRING_CELL,
-                        FIELD_STRING_EMPTY_TAXY_ID
-                )
+                new Fields("windowID", "cell", "taxiID")
         );
     }
 }

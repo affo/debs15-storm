@@ -7,6 +7,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 
 import java.io.*;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,25 +53,22 @@ public class DataWriter extends BaseRichBolt {
     }
 
     protected String getNewLine(Tuple t) {
-        String l = "{\n\n";
-        l += getKeyValue(t, RankingBolt.FIELD_DATE_PICKUP_TS);
-        l += getKeyValue(t, RankingBolt.FIELD_DATE_DROPOFF_TS);
-        l += "\n";
+        List<Tuple> ranking = (List<Tuple>) t.getValue(0);
+        String l = "{\n";
 
-        for (int i = 0; i < RankingBolt.rankingLength; i++) {
-            l += getKeyValue(t, RankingBolt.FIELD_STRING_CELLS[i]);
-            l += getKeyValue(t, RankingBolt.FIELD_INTEGER_NO_EMPTY_TAXIS[i]);
-            l += getKeyValue(t, RankingBolt.FIELD_DOUBLE_MEDIAN_PROFITS[i]);
-            l += getKeyValue(t, RankingBolt.FIELD_DOUBLE_PROFITABILITIES[i]);
-            l += "\n";
+        for (Tuple r : ranking) {
+            if (r != null) {
+                String cell = r.getString(1);
+                Double profit = r.getDouble(2);
+                l += "\t\'" + cell + "\': " + profit + ",\n";
+            } else {
+                l += "\tNULL,\n";
+            }
         }
 
-        l += "}";
+        l = l.substring(0, l.length() - 2); // remove last comma
+        l += "\n}";
         return l;
-    }
-
-    private String getKeyValue(Tuple t, String field) {
-        return "\t" + field + ": " + t.getValueByField(field).toString() + ",\n";
     }
 
     @Override

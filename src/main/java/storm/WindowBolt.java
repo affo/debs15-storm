@@ -27,10 +27,12 @@ public abstract class WindowBolt extends BaseRichBolt {
     private int windowSize;
     private long lastTime;
     private OutputCollector collector;
+    private int windowID;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector  = outputCollector;
+        this.windowID = 0;
     }
 
     /**
@@ -51,8 +53,10 @@ public abstract class WindowBolt extends BaseRichBolt {
                 // in this case we evaluate the onWindow
                 // method every SECONDS_PER_TIME_UNIT which
                 // is basically window granularity
-                onWindow(window);
+                onWindow(windowID, window);
             }
+
+            windowID++;
         } else {
 
             if (lastTime == 0) {
@@ -61,10 +65,25 @@ public abstract class WindowBolt extends BaseRichBolt {
                 lastTime = getTs(tuple).getTime();
             }
 
-            window.add(tuple);
+            if (!tupleInWindow(tuple)) {
+                window.add(tuple);
+            }
         }
 
         collector.ack(tuple);
+    }
+
+    private boolean tupleInWindow(Tuple tuple) {
+        int id = tuple.getInteger(0);
+
+        for (Tuple t : window) {
+            int oid = t.getInteger(0);
+            if (id == oid) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void advanceWindow() {
@@ -93,7 +112,7 @@ public abstract class WindowBolt extends BaseRichBolt {
         }
     }
 
-    public abstract void onWindow(List<Tuple> window);
+    public abstract void onWindow(int windowID, List<Tuple> window);
 
     public abstract Date getTs(Tuple t);
 

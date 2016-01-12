@@ -20,11 +20,6 @@ public class ProfitBolt extends WindowBolt {
 
     public static final String OUT_STREAM_ID = "profit_stream";
 
-    public static final String FIELD_DATE_PICKUP_TS = "pickup_ts";
-    public static final String FIELD_DATE_DROPOFF_TS = "dropoff_ts";
-    public static final String FIELD_STRING_CELL = "cell";
-    public static final String FIELD_DOUBLE_MEDIAN_PROFIT = "median_profit";
-
     /**
      * @param windowSize size of the window in seconds
      */
@@ -34,7 +29,7 @@ public class ProfitBolt extends WindowBolt {
 
     @Override
     public Date getTs(Tuple t) {
-        return (Date) t.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
+        return ((TaxiRide) t.getValue(1)).dropoffTS;
     }
 
     @Override
@@ -44,18 +39,14 @@ public class ProfitBolt extends WindowBolt {
     }
 
     @Override
-    public void onWindow(List<Tuple> window) {
-        Tuple trigger = window.get(window.size() - 1);
-        Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
-        Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
-
+    public void onWindow(int windowID, List<Tuple> window) {
         Map<String, List<Double>> profitPerCell = getProfitPerCell(window);
         Map<String, Double> medianPerCell = getMedianPerCell(profitPerCell);
         for (Map.Entry<String, Double> e : medianPerCell.entrySet()) {
             this.collector.emit(
                     OUT_STREAM_ID,
                     new Values(
-                            puTs, doTs,
+                            windowID,
                             e.getKey(), // cell
                             e.getValue() // median profit
                     )
@@ -66,9 +57,10 @@ public class ProfitBolt extends WindowBolt {
     private Map<String, List<Double>> getProfitPerCell(List<Tuple> window) {
         Map<String, List<Double>> profitPerCell = new HashMap<>();
         for (Tuple t : window) {
-            String pickupCell = (String) t.getValueByField(DataGenerator.FIELD_STRING_PICKUP_CELL);
-            double fare = (double) t.getValueByField(DataGenerator.FIELD_DOUBLE_FARE);
-            double tip = (double) t.getValueByField(DataGenerator.FIELD_DOUBLE_TIP);
+            TaxiRide tr = ((TaxiRide) t.getValue(1));
+            String pickupCell = tr.pickupCell;
+            double fare = tr.fare;
+            double tip = tr.tip;
 
             List<Double> profit = profitPerCell.get(pickupCell);
             if (profit == null) {
@@ -113,12 +105,7 @@ public class ProfitBolt extends WindowBolt {
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declareStream(
                 OUT_STREAM_ID,
-                new Fields(
-                        FIELD_DATE_PICKUP_TS,
-                        FIELD_DATE_DROPOFF_TS,
-                        FIELD_STRING_CELL,
-                        FIELD_DOUBLE_MEDIAN_PROFIT
-                )
+                new Fields("windowID", "cell", "profit")
         );
     }
 }

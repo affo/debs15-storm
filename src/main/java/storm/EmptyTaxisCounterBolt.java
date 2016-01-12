@@ -3,88 +3,65 @@ package storm;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Created by affo on 03/11/15.
  */
-public class EmptyTaxisCounterBolt extends WindowBolt {
+public class EmptyTaxisCounterBolt extends BaseRichBolt {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EmptyTaxisCounterBolt.class);
     private OutputCollector collector;
+    private Map<String, Integer[]> counter;
 
     public static final String OUT_STREAM_ID = "no_empty_taxis_stream";
 
-    public static final String FIELD_DATE_PICKUP_TS = "pickup_ts";
-    public static final String FIELD_DATE_DROPOFF_TS = "dropoff_ts";
-    public static final String FIELD_STRING_CELL = "cell";
-    public static final String FIELD_INTEGER_NO_EMPTY_TAXIS = "no_empty_taxis";
-
-    /**
-     * @param windowSize size of the window in seconds
-     */
-    public EmptyTaxisCounterBolt(int windowSize) {
-        super(windowSize);
-    }
-
     @Override
-    public void onWindow(List<Tuple> window) {
-        Map<String, Integer> counter = new HashMap<>();
+    public void execute(Tuple t) {
+        int windowID = t.getInteger(0);
+        String cell = t.getString(1);
 
-        for (Tuple t : window) {
-            String cell = t.getStringByField(EmptyTaxisBolt.FIELD_STRING_CELL);
-            Integer count = counter.get(cell);
-            if (count == null) {
-                count = 0;
-            }
-            count++;
-            counter.put(cell, count);
+        Integer[] count = counter.get(cell);
+
+        if (count == null) {
+            count = new Integer[2];
+            count[0] = windowID;
+            count[1] = 0;
         }
 
-        Tuple trigger = window.get(window.size() - 1);
-        Object puTs = trigger.getValueByField(DataGenerator.FIELD_DATE_PICKUP_TS);
-        Object doTs = trigger.getValueByField(DataGenerator.FIELD_DATE_DROPOFF_TS);
-
-        for (Map.Entry<String, Integer> e : counter.entrySet()) {
+        if (windowID > count[0]) {
             this.collector.emit(
                     OUT_STREAM_ID,
-                    new Values(
-                            puTs, doTs,
-                            e.getKey(), // cell
-                            e.getValue() // # empty taxis
-                    )
+                    new Values(count[0], cell, count[1])
             );
+            counter.remove(cell);
+        } else if (windowID == count[0]) {
+            count[1]++;
+            counter.put(cell, count);
+        } else {
+            // should never happen
+            throw new RuntimeException("Out of sequence window ID: " + windowID + " < " + count[0]);
         }
     }
 
-    @Override
-    public Date getTs(Tuple t) {
-        return (Date) t.getValueByField(EmptyTaxisBolt.FIELD_DATE_DROPOFF_TS);
-    }
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        super.prepare(map, topologyContext, outputCollector);
         this.collector = outputCollector;
+        this.counter = new HashMap<>();
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declareStream(
                 OUT_STREAM_ID,
-                new Fields(
-                        FIELD_DATE_PICKUP_TS,
-                        FIELD_DATE_DROPOFF_TS,
-                        FIELD_STRING_CELL,
-                        FIELD_INTEGER_NO_EMPTY_TAXIS
-                )
+                new Fields("windowID", "cell", "empty_taxis_count")
         );
     }
 }
